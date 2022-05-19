@@ -1,20 +1,30 @@
 package cat.petproject.bionicproject.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.math.BigDecimal;
 
-public class candlestickData {
+public class CandlestickData {
+    @JsonProperty("symbol")
     private String symbol;
 
+    @JsonProperty("openTime")
     private Long openTime;
+    @JsonProperty("closeTime")
     private Long closeTime;
 
+    @JsonProperty("open")
     private BigDecimal open;
+    @JsonProperty("high")
     private BigDecimal high;
+    @JsonProperty("low")
     private BigDecimal low;
+    @JsonProperty("close")
     private BigDecimal close;
+    @JsonProperty("volume")
     private BigDecimal volume;
 
-    public candlestickData(String symbol, Long openTime, Long closeTime, BigDecimal open, BigDecimal high, BigDecimal low, BigDecimal close, BigDecimal volume) {
+    public CandlestickData(String symbol, Long openTime, Long closeTime, BigDecimal open, BigDecimal high, BigDecimal low, BigDecimal close, BigDecimal volume) {
         this.symbol = symbol;
         this.openTime = openTime;
         this.closeTime = closeTime;

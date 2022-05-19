@@ -1,12 +1,16 @@
 package cat.petproject.bionicproject.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.math.BigDecimal;
 
-public class tickerPrice {
+public class TickerPrice {
+    @JsonProperty("symbol")
     private String symbol;
+    @JsonProperty("price")
     private BigDecimal price;
 
-    public tickerPrice(String symbol, BigDecimal price) {
+    public TickerPrice(String symbol, BigDecimal price) {
         this.symbol = symbol;
         this.price = price;
     }
