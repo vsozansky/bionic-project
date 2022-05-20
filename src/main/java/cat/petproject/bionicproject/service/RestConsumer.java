@@ -2,10 +2,7 @@ package cat.petproject.bionicproject.service;
 
 import cat.petproject.bionicproject.dto.CandlestickData;
 import cat.petproject.bionicproject.dto.TickerPrice;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
@@ -20,20 +17,41 @@ public class RestConsumer {
         this.restTemplate = restTemplate;
     }
 
-    @GetMapping(value = "/ticker")
-    public TickerPrice[] getTickerPriceList() {
+    public HttpHeaders getHttpHeaders(){
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+        //httpHeaders.set("Accept", "application/json");
+        //httpHeaders.add("user-agent", "Mozilla/5.0 Firefox/26.0");
+        //httpHeaders.add("Host", "localhost");
+        return httpHeaders;
+    }
+
+    @GetMapping(value = "/ticker")
+    public TickerPrice[] getTickerPriceList() {
+        //String resourceUrl = "https://api.binance.com/api/v3/ticker/price";
+        String resourceUrl = "https://api.binance.com/api/v3/ticker/price?symbols=[\"BTCUSDT\",\"ETHUSDT\",\"XRPUSDT\"]";
+        HttpHeaders httpHeaders = getHttpHeaders();
         HttpEntity<String> entity = new HttpEntity<>(httpHeaders);
-        return restTemplate.exchange("https://api.binance.com/api/v3/ticker/price", HttpMethod.GET, entity, TickerPrice[].class).getBody();
+        var result = restTemplate.exchange(resourceUrl, HttpMethod.GET, entity, TickerPrice[].class);
+        var bodyResult = result.getBody() ;
+        return bodyResult;
     }
 
     @GetMapping(value = "/candlestick")
     public CandlestickData[] getCandlestickDataList() {
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+        //https://api.binance.com/api/v3/klines?symbol=ETHBTC&interval=1d&limit=1
+        //[[1653004800000,"0.06661000","0.06760000","0.06648400","0.06749100","68734.52060000",1653091199999,"4609.71059174",83268,"34649.27850000","2323.90049805","0"]]
+        String resourceUrl = "https://api.binance.com/api/v3/klines?symbol=ETHBTC&interval=1d&limit=1";
+        HttpHeaders httpHeaders = getHttpHeaders();
         HttpEntity<String> entity = new HttpEntity<>(httpHeaders);
-        return restTemplate.exchange("https://api.binance.com/api/v3/klines", HttpMethod.GET, entity, CandlestickData[].class).getBody();
+
+        //TODO переделать. сделать чтобы возвращал массив объектов
+        var resultString = restTemplate.exchange(resourceUrl, HttpMethod.GET, entity, String.class);
+        System.out.println(resultString.getBody());
+        return null;
+        /*
+        return restTemplate.exchange(resourceUrl, HttpMethod.GET, entity, CandlestickData[].class).getBody();
+        */
     }
 
     /*

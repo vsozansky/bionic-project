@@ -24,6 +24,9 @@ public class CandlestickData {
     @JsonProperty("volume")
     private BigDecimal volume;
 
+    public CandlestickData() {
+    }
+
     public CandlestickData(String symbol, Long openTime, Long closeTime, BigDecimal open, BigDecimal high, BigDecimal low, BigDecimal close, BigDecimal volume) {
         this.symbol = symbol;
         this.openTime = openTime;

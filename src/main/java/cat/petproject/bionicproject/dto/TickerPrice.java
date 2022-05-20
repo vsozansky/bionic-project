@@ -10,6 +10,9 @@ public class TickerPrice {
     @JsonProperty("price")
     private BigDecimal price;
 
+    public TickerPrice() {
+    }
+
     public TickerPrice(String symbol, BigDecimal price) {
         this.symbol = symbol;
         this.price = price;
