@@ -14,52 +14,84 @@ import java.util.List;
 @RestController
 public class RestConsumer {
 
+    private static final String[] resourceUrls = {"https://api.binance.com", "https://api1.binance.com", "https://api2.binance.com", "https://api3.binance.com"};
+    private static final String[] symbols = {"ETHBTC", "ETHUSDT", "XRPUSDT"};
+    private static final String tickerApiUrl = String.format("/api/v3/ticker/price?symbols=%s", arraySymbolsToString());
+    private static final String candlestickApiUrl = "/api/v3/klines?symbol=%s&interval=1d&limit=1";
+
+
     RestTemplate restTemplate;
 
     public RestConsumer(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
     }
 
-    public HttpHeaders getHttpHeaders(){
+    private static String arraySymbolsToString() {
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append("[");
+        if (symbols.length > 0) {
+            stringBuilder.append("\"");
+            stringBuilder.append(symbols[0]);
+            stringBuilder.append("\"");
+            for (int i = 1; i < symbols.length; i++) {
+                stringBuilder.append(",\"");
+                stringBuilder.append(symbols[i]);
+                stringBuilder.append("\"");
+            }
+        }
+        stringBuilder.append("]");
+        return stringBuilder.toString();
+    }
+
+    public HttpHeaders getHttpHeaders() {
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
-        //httpHeaders.set("Accept", "application/json");
-        //httpHeaders.add("user-agent", "Mozilla/5.0 Firefox/26.0");
-        //httpHeaders.add("Host", "localhost");
         return httpHeaders;
     }
 
     @GetMapping(value = "/ticker")
     public TickerPrice[] getTickerPriceList() {
-        //String resourceUrl = "https://api.binance.com/api/v3/ticker/price";
-        String resourceUrl = "https://api.binance.com/api/v3/ticker/price?symbols=[\"BTCUSDT\",\"ETHUSDT\",\"XRPUSDT\"]";
         HttpHeaders httpHeaders = getHttpHeaders();
         HttpEntity<String> entity = new HttpEntity<>(httpHeaders);
-        return restTemplate.exchange(resourceUrl, HttpMethod.GET, entity, TickerPrice[].class).getBody() ;
+        ResponseEntity<TickerPrice[]> responseEntity;
+        for (String resourceUrl : resourceUrls) {
+            responseEntity = restTemplate.exchange(resourceUrl + tickerApiUrl, HttpMethod.GET, entity, TickerPrice[].class);
+            if (responseEntity.getStatusCode() == HttpStatus.OK) {
+                return responseEntity.getBody();
+            }
+        }
+        return new TickerPrice[0];
     }
 
+    @SuppressWarnings("squid:S3740")
     @GetMapping(value = "/candlestick")
-    //public CandlestickData[] getCandlestickDataList() {
     public List<CandlestickData> getCandlestickDataList() {
-        //https://api.binance.com/api/v3/klines?symbol=ETHBTC&interval=1d&limit=1
-        //[[1653004800000,"0.06661000","0.06760000","0.06648400","0.06749100","68734.52060000",1653091199999,"4609.71059174",83268,"34649.27850000","2323.90049805","0"]]
-
-        String[] symbols = {"ETHBTC", "ETHUSDT", "XRPUSDT"};
-        String resourceUrl = "https://api.binance.com/api/v3/klines";
+    /*
+    @GetMapping(value = "/candlestick/{symbol}")
+    public List<CandlestickData> getCandlestickDataList(@PathVariable("symbol") String symbol) {
+    */
         List<CandlestickData> candlestickDatas = new ArrayList<>();
-
         HttpHeaders httpHeaders = getHttpHeaders();
         HttpEntity<String> entity = new HttpEntity<>(httpHeaders);
 
-        String getParameters;
+        String candlestickApi;
+        ResponseEntity<ArrayList> responseEntity = null;
         List<List> resultList;
         List result;
+
         for (String symbol : symbols) {
-            getParameters = "?symbol=" + symbol + "&interval=1d&limit=1";
-            resultList = restTemplate.exchange(resourceUrl + getParameters, HttpMethod.GET, entity, ArrayList.class).getBody();
-            if (resultList != null) {
+            candlestickApi = String.format(candlestickApiUrl, symbol);
+            responseEntity = null;
+            for (String resourceUrl : resourceUrls) {
+                responseEntity = restTemplate.exchange(resourceUrl + candlestickApi, HttpMethod.GET, entity, ArrayList.class);
+                if (responseEntity.getStatusCode() == HttpStatus.OK) {
+                    break;
+                }
+            }
+            if (responseEntity != null && responseEntity.getStatusCode() == HttpStatus.OK) {
+                resultList = responseEntity.getBody();
                 for (int i = 0; i < resultList.size(); i++) {
-                    result = (List) resultList.get(i);
+                    result = resultList.get(i);
                     candlestickDatas.add(new CandlestickData(
                             symbol
                             , (Long) result.get(0) //Long openTime
@@ -73,36 +105,7 @@ public class RestConsumer {
                 }
             }
         }
-        //return (CandlestickData[]) candlestickDatas.toArray();
         return candlestickDatas;
     }
-
-    /*
-    @PostMapping(value = "/posts")
-    public String createPost(@RequestBody TickerPrice post) {
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
-        HttpEntity<TickerPrice> entity = new HttpEntity<TickerPrice>(post, httpHeaders);
-        return restTemplate.exchange("https://jsonplaceholder.typicode.com/posts", HttpMethod.POST, entity, String.class).getBody();
-
-    }
-
-    @PutMapping(value = "/posts/{id}")
-    public String updatePost(@PathVariable("id") int id, @RequestBody TickerPrice post) {
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
-        HttpEntity<TickerPrice> entity = new HttpEntity<>(post, httpHeaders);
-        return restTemplate.exchange("https://jsonplaceholder.typicode.com/posts/" + id, HttpMethod.PUT, entity, String.class).getBody();
-    }
-
-    @DeleteMapping(value = "/posts/{id}")
-    public String deletePost(@PathVariable("id") int id) {
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
-        HttpEntity<String> entity = new HttpEntity<>(httpHeaders);
-        return restTemplate.exchange("https://jsonplaceholder.typicode.com/posts/" + id, HttpMethod.DELETE, entity, String.class).getBody();
-    }
-
-    */
 
 }
