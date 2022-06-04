@@ -2,6 +2,9 @@ package cat.petproject.bionicproject.service;
 
 import cat.petproject.bionicproject.dto.CandlestickData;
 import cat.petproject.bionicproject.dto.TickerPrice;
+import cat.petproject.bionicproject.persistence.services.CandlestickService;
+import cat.petproject.bionicproject.persistence.services.TickerService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
@@ -19,11 +22,15 @@ public class RestConsumer {
     private static final String tickerApiUrl = String.format("/api/v3/ticker/price?symbols=%s", arraySymbolsToString());
     private static final String candlestickApiUrl = "/api/v3/klines?symbol=%s&interval=1d&limit=1";
 
+    private final RestTemplate restTemplate;
+    private final TickerService tickerService;
+    private final CandlestickService candlestickService;
 
-    RestTemplate restTemplate;
-
-    public RestConsumer(RestTemplate restTemplate) {
+    @Autowired
+    public RestConsumer(RestTemplate restTemplate, TickerService tickerService, CandlestickService candlestickService) {
         this.restTemplate = restTemplate;
+        this.tickerService = tickerService;
+        this.candlestickService = candlestickService;
     }
 
     private static String arraySymbolsToString() {
